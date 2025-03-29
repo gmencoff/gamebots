@@ -1,11 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-export class MyCoupBot {
+// ==========================================
+// Implement the methods of MyCoupBot Class
+// ==========================================
 
-  // Implement the methods of MyCoupBot.
+export class MyCoupBot implements CoupBot {
 
-  handleGameStart(): void {
+  myId: number = 0;
+
+  handleGameStart(playerId: number): void {
     // Can do setup action on game start
+    this.myId = playerId;
   }
 
   handleChooseAction(gameState: VisibleGameState): Action {
@@ -21,19 +26,19 @@ export class MyCoupBot {
     return new Income();
   }
 
-  handleAssassinationResponse(playerId: string, gameState: VisibleGameState): AllowOrBlock {
+  handleAssassinationResponse(playerId: number, gameState: VisibleGameState): AllowOrBlock {
     // Simple strategy: Block if we have a Contessa, otherwise allow
     const hasContessa = gameState.hand.some(card => card.card === Card.Contessa && !card.revealed);
     return hasContessa ? AllowOrBlock.Allow : AllowOrBlock.Block;
   }
 
-  handleForeignAidResponse(playerId: string, gameState: VisibleGameState): AllowOrBlock {
+  handleForeignAidResponse(playerId: number, gameState: VisibleGameState): AllowOrBlock {
     // Simple strategy: Block if we have a Duke, otherwise allow
     const hasDuke = gameState.hand.some(card => card.card === Card.Duke && !card.revealed);
     return hasDuke ? AllowOrBlock.Allow : AllowOrBlock.Block;
   }
 
-  handleStealResponse(playerId: string, gameState: VisibleGameState): StealResponse {
+  handleStealResponse(playerId: number, gameState: VisibleGameState): StealResponse {
     // Simple strategy: Block if we have Ambassador or Captain, otherwise allow
     const hasCaptain = gameState.hand.some(card => (card.card === Card.Captain && !card.revealed));
     const hasAmbassador = gameState.hand.some(card => (card.card === Card.Ambassador && !card.revealed));
@@ -57,15 +62,55 @@ export class MyCoupBot {
     return RevealCardResponse.Card_1;
   }
 
-  handleOfferChallenge(playerId: string, action: Action, gameState: VisibleGameState): ChallengeResponse {
+  handleOfferChallenge(playerId: number, action: Action, gameState: VisibleGameState): ChallengeResponse {
     // Simple strategy: Never challenge
     return ChallengeResponse.No_challenge;
+  }
+
+  handleActionChosen(playerId: number, action: Action): void {
+    // Can do something when an action is chosen
+  }
+
+  handleLostInfluence(playerId: number, card: Card): void {
+    // Can do something when a player loses influence
+  }
+
+  handleNewCard(playerId: number, card: Card): void {
+    // Can do something when a player receives a new card
+  }
+
+  handleChallenge(playerId: number, hascard: boolean): void {
+    // Can do something when a challenge is made
+  }
+
+  handlePlayerResponded(playerId: number): void {
+    // Can do something when a challenge is made
   }
 }
 
 // ==========================================
 // Available types (DO NOT MODIFY):
 // ==========================================
+
+// ==========================================
+// Coup Bot Interface:
+// ==========================================
+
+export interface CoupBot {
+  handleGameStart(playerId: number): void
+  handleChooseAction(gameState: VisibleGameState): Action
+  handleAssassinationResponse(playerId: number, gameState: VisibleGameState): AllowOrBlock
+  handleForeignAidResponse(playerId: number, gameState: VisibleGameState): AllowOrBlock
+  handleStealResponse(playerId: number, gameState: VisibleGameState): StealResponse
+  handleChooseCardsToReturn(cards: Card[], gameState: VisibleGameState): Card[]
+  handleRevealCard(card1: Card, card2: Card, gameState: VisibleGameState): RevealCardResponse
+  handleOfferChallenge(playerId: number, action: Action, gameState: VisibleGameState): ChallengeResponse
+  handleActionChosen(playerId: number, action: Action): void
+  handleLostInfluence(playerId: number, card: Card): void
+  handleNewCard(playerId: number, card: Card): void
+  handleChallenge(playerId: number, hascard: boolean): void
+  handlePlayerResponded(playerId: number): void
+}
 
 // ==========================================
 // Actions:
@@ -165,8 +210,8 @@ export class Coup implements Action {
 // ==========================================
 
 export enum AllowOrBlock {
-  Allow,
-  Block
+  Allow = "Allow",
+  Block = "Block"
 }
 
 export class StealResponse {
@@ -180,13 +225,13 @@ export class StealResponse {
 }
 
 export enum RevealCardResponse {
-  Card_1,
-  Card_2
+  Card_1 = "Card_1",
+  Card_2 = "Card_2"
 }
 
 export enum ChallengeResponse {
-  Challenge,
-  No_challenge
+  Challenge = "Challenge",
+  No_challenge = "No_challenge"
 }
 
 // ==========================================
@@ -212,9 +257,9 @@ export interface VisibleGameState {
 }
 
 export enum Card {
-    Duke,
-    Assassin,
-    Captain,
-    Ambassador,
-    Contessa
+    Duke = "Duke",
+    Assassin = "Assassin",
+    Captain = "Captain",
+    Ambassador = "Ambassador",
+    Contessa = "Contessa"
 }
