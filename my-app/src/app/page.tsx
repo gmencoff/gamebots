@@ -9,7 +9,7 @@ import { CoupBot } from "./coupBot";
 
 declare global {
   interface Window {
-    MyCoupBot: CoupBot;
+    MyCoupBots: CoupBot[] | undefined;
   }
 }
 
@@ -20,6 +20,10 @@ export default function BotIDE(): JSX.Element {
   const [testingBot, setTestingBot] = useState<boolean>(false);
 
   useEffect(() => {
+    if (typeof window.MyCoupBots === "undefined") {
+      window.MyCoupBots = [];
+    }
+
     async function loadText(url: string): Promise<string> {
       const response = await fetch(url);
       return response.text();
@@ -34,14 +38,10 @@ export default function BotIDE(): JSX.Element {
     loadDefaultBot();
   }, []);
 
-  const setDebugLogs = (logs: string): void => {
-    setLogs((prevLogs) => [...prevLogs, logs]);
-  };
-
   const runCode = async (): Promise<void> => {
     const url = prompt("Enter WebSocket URL:", "ws://localhost:8080");
     if (url) {
-      const exportcode = code.concat(`\nwindow.MyCoupBot = new MyCoupBot();`)
+      const exportcode = code.concat(`\nwindow.MyCoupBots.push(new MyCoupBot());`)
       const result = ts.transpileModule(exportcode, {
           compilerOptions: {
               target: ts.ScriptTarget.ESNext,
@@ -53,13 +53,16 @@ export default function BotIDE(): JSX.Element {
       const jsCode = result.outputText;
       const sourceMap = result.sourceMapText;
 
-    //   const logMessages: string[] = [];
-    //   const originalConsoleLog = console.log;
-    //   console.log = (...args) => {
-    //     logMessages.push(args.map(a => JSON.stringify(a)).join(" "));
-    //     setLogs([...logMessages]); // Update UI
-    //     originalConsoleLog(...args); // Keep default behavior
-    // };
+      const logMessages: string[] = [];
+      const originalConsoleLog = console.log;
+      console.log = (...args) => {
+        logMessages.push(args.map(a => a).join(" "));
+        setLogs([...logMessages]); // Update UI
+        originalConsoleLog(...args); // Keep default behavior
+      };
+
+      // Remove previous script if exists
+      document.querySelectorAll("script[data-bot-script]").forEach(script => script.remove());
       
       // Create a Blob URL for the JS code and source map
       const blob = new Blob([jsCode + `\n//# sourceMappingURL=data:application/json;base64,${btoa(sourceMap!)}`], { type: "application/javascript" });
@@ -67,13 +70,16 @@ export default function BotIDE(): JSX.Element {
 
       // Create a script tag to load the Blob
       const script = document.createElement("script");
+      script.setAttribute("data-bot-script", "true"); // Tag to identify for future cleanup
       script.src = bloburl;
 
       script.onload = () => {
           // Once loaded, you can now access the class via the global window object
-          const bot = window.MyCoupBot;
-          setWorker(new BotRunner(url, bot, setDebugLogs));
-          setTestingBot(true);
+          const bot = window.MyCoupBots?.pop();
+          if (bot) {
+            setWorker(new BotRunner(url, bot));
+            setTestingBot(true);
+          }
       };
 
       script.onerror = (error) => {
@@ -95,7 +101,7 @@ export default function BotIDE(): JSX.Element {
 
   const sendResponse = (): void => {
     if (worker) {
-      worker.runNextAction();
+      worker.sendResponse();
     }
   };
 
