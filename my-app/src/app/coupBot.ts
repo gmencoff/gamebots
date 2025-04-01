@@ -19,6 +19,8 @@ export class MyCoupBot implements CoupBot {
       const target = gameState.other_players.find(p => !p.visible_card)?.player_id;
       if (target) {
         return new Coup(target);
+      } else {
+        return new Coup(gameState.other_players[0].player_id);
       }
     }
     

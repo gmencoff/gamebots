@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Action, AllowOrBlock, Card, ChallengeResponse, CoupBot, RevealCardResponse, StealResponse, VisibleGameState } from "./coupBot";
 
 // Run the user created bot by creating an instance of the Bot class and redirecting the server messages to the bots methods
@@ -6,6 +7,8 @@ export class BotRunner {
     ws: WebSocket;
     bot: CoupBot;
     runNextAction?: () => void;
+    messagesReceived: any[] = [];
+    outgoingMessagesBlocked: boolean = false;
     
     constructor(url: string, bot: CoupBot) {
         this.bot = bot;
@@ -28,10 +31,17 @@ export class BotRunner {
     }
 
     sendResponse() {
-        if (this.runNextAction) {
+        if (this.runNextAction && !this.outgoingMessagesBlocked) {
             this.runNextAction();
             console.log('Response sent');
             this.runNextAction = undefined;
+        }
+    }
+
+    rerunLastStep() {
+        if (this.messagesReceived.length > 0) {
+            const lastMessage = this.messagesReceived[this.messagesReceived.length - 1];
+            this.handleServerMessage(this.bot, lastMessage);
         }
     }
 
@@ -39,11 +49,29 @@ export class BotRunner {
         this.ws?.close();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    updateBot(bot: CoupBot) {
+        // Set the bot and re-run all commands that were sent up until this point
+        this.bot = bot;
+        const prevMessages = this.messagesReceived;
+        this.messagesReceived = [];
+        this.outgoingMessagesBlocked = true;
+        prevMessages.forEach((message) => {
+            this.handleServerMessage(this.bot, message);
+        });
+        this.outgoingMessagesBlocked = false;
+    }
+
     handleServerMessage(bot: CoupBot, message: any) {
+
+        // Store messages for playback
+        this.messagesReceived.push(message);
 
         console.log(`Received message: ${JSON.stringify(message)}`);
 
+        this.processMessage(bot, message);
+    }
+
+    processMessage(bot: CoupBot, message: any) {
         switch (message.type) {
           case 'Game_start': {
             bot.handleGameStart(message.self_player_id);
