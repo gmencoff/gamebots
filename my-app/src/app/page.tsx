@@ -21,12 +21,9 @@ export default function BotIDE(): JSX.Element {
   const [testingBot, setTestingBot] = useState<boolean>(false);
 
   // Capture console.log messages to the app log
-  const logMessages: string[] = [];
-  const originalConsoleLog = console.log;
   console.log = (...args) => {
-    logMessages.push(args.map(a => a).join(" "));
-    setLogs([...logMessages]); // Update UI
-    originalConsoleLog(...args); // Keep default behavior
+    logs.push(args.map(a => a).join(" "));
+    setLogs([...logs]); // Update UI
   };
 
   useEffect(() => {
@@ -118,7 +115,6 @@ export default function BotIDE(): JSX.Element {
 
   const stopRunning = (): void => {
     if (worker) {
-      setLogs([""]);
       worker.killGame();
       setWorker(null);
       setLogs([""]);
@@ -134,21 +130,21 @@ export default function BotIDE(): JSX.Element {
 
   return (
     <div className="flex flex-col h-screen p-4">
-      <h1 className="text-xl font-bold">Bot IDE</h1>
       <Editor
-        height="60vh"
+        height={testingBot ? "60vh" : "90vh"} 
         defaultLanguage="typescript"
         theme="vs-dark"
         value={code}
         onChange={(value) => setCode(value || "")}
       />
       {!testingBot ? (
-        <div className="flex space-x-2 mt-2">
+        <div className="flex justify-end space-x-2 mt-2">
           <Button onClick={runCode} className="mt-2">Test Bot</Button>
         </div>
       ) : (
         <>
-          <div className="flex space-x-2 mt-2">
+        
+        <div className="flex justify-end space-x-2 mt-2">
             <Button onClick={sendResponse}>Send Response</Button>
             <Button onClick={updateBot}>Update Bot</Button>
             <Button onClick={stopRunning}>Stop Testing</Button>

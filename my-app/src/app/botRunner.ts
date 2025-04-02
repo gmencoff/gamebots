@@ -6,6 +6,7 @@ export class BotRunner {
 
     ws: WebSocket;
     bot: CoupBot;
+    playerId: number = 0;
     runNextAction?: () => void;
     messagesReceived: any[] = [];
     outgoingMessagesBlocked: boolean = false;
@@ -74,6 +75,7 @@ export class BotRunner {
     processMessage(bot: CoupBot, message: any) {
         switch (message.type) {
           case 'Game_start': {
+            this.playerId = message.self_player_id;
             bot.handleGameStart(message.self_player_id);
             break;
           }
