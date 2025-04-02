@@ -31,13 +31,13 @@ export class MyCoupBot implements CoupBot {
   handleAssassinationResponse(playerId: number, gameState: VisibleGameState): AllowOrBlock {
     // Simple strategy: Block if we have a Contessa, otherwise allow
     const hasContessa = gameState.hand.some(card => card.card === Card.Contessa && !card.revealed);
-    return hasContessa ? AllowOrBlock.Allow : AllowOrBlock.Block;
+    return hasContessa ? AllowOrBlock.Block : AllowOrBlock.Allow;
   }
 
   handleForeignAidResponse(playerId: number, gameState: VisibleGameState): AllowOrBlock {
     // Simple strategy: Block if we have a Duke, otherwise allow
     const hasDuke = gameState.hand.some(card => card.card === Card.Duke && !card.revealed);
-    return hasDuke ? AllowOrBlock.Allow : AllowOrBlock.Block;
+    return hasDuke ? AllowOrBlock.Block : AllowOrBlock.Allow;
   }
 
   handleStealResponse(playerId: number, gameState: VisibleGameState): StealResponse {
@@ -124,7 +124,7 @@ export interface Action {
 
 export interface ActionData {
   type: string;
-  target_player_id?: string;
+  player_id?: string;
 }
 
 export class Income implements Action {
@@ -161,48 +161,48 @@ export class Tax implements Action {
 
 export class Steal implements Action {
   
-  target_player_id: string;
+  player_id: string;
 
-  constructor(target_player_id: string) {
-    this.target_player_id = target_player_id;
+  constructor(player_id: string) {
+    this.player_id = player_id;
   }
 
     getActionData(): ActionData {
         return {
             type: 'Steal',
-            target_player_id: this.target_player_id
+            player_id: this.player_id
         }
     }
 }
 
 export class Assassinate implements Action {
   
-  target_player_id: string;
+  player_id: string;
 
-  constructor(target_player_id: string) {
-    this.target_player_id = target_player_id;
+  constructor(player_id: string) {
+    this.player_id = player_id;
   }
 
     getActionData(): ActionData {
         return {
             type: 'Assassinate',
-            target_player_id: this.target_player_id
+            player_id: this.player_id
         }
     }
 }
 
 export class Coup implements Action {
   
-  target_player_id: string;
+  player_id: string;
 
-  constructor(target_player_id: string) {
-    this.target_player_id = target_player_id;
+  constructor(player_id: string) {
+    this.player_id = player_id;
   }
 
   getActionData(): ActionData {
     return {
       type: 'Coup',
-      target_player_id: this.target_player_id
+      player_id: this.player_id
     };
   }
 }
