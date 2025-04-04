@@ -7,6 +7,8 @@ import { BotRunner } from "../../bots/botRunner";
 import ts from "typescript";
 import { CoupBot } from "../../bots/coupBot";
 import LogConsole from "./Console";
+import { debounce } from "lodash";
+import { loadUserCode, saveUserCode } from "@/firebase/userCodeReadWrite";
 
 declare global {
   interface Window {
@@ -26,6 +28,14 @@ function BotIDE(): JSX.Element {
     setLogs([...logs]); // Update UI
   };
 
+  const debouncedSave = debounce(async () => {await saveUserCode(code)}, 2000);
+
+  // Update state when user types
+  const handleCodeChange = (value: string) => {
+      setCode(value);
+      debouncedSave();
+  };
+
   useEffect(() => {
     if (typeof window.MyCoupBots === "undefined") {
       window.MyCoupBots = [];
@@ -43,6 +53,17 @@ function BotIDE(): JSX.Element {
     }
     
     loadDefaultBot();
+  }, []);
+
+  useEffect(() => {
+    async function loadCode() {
+      const savedCode = await loadUserCode();
+      if (savedCode) {
+        setCode(savedCode);
+      }
+    }
+    
+    loadCode();
   }, []);
 
   const getUserBot = async (botFunction: (bot: CoupBot) => void): Promise<void> => {
@@ -135,7 +156,7 @@ function BotIDE(): JSX.Element {
         defaultLanguage="typescript"
         theme="vs-dark"
         value={code}
-        onChange={(value) => setCode(value || "")}
+        onChange={(value) => handleCodeChange(value || "")}
       />
       {!testingBot ? (
         <div className="flex space-x-2 mt-2">
