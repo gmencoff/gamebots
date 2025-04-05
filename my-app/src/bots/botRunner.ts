@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Action, AllowOrBlock, Card, ChallengeResponse, CoupBot, RevealCardResponse, StealResponse, VisibleGameState } from "./coupBot";
 
 // Run the user created bot by creating an instance of the Bot class and redirecting the server messages to the bots methods
@@ -209,7 +208,6 @@ export class BotRunner {
         this.ws?.send(JSON.stringify(responseData));
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       parseVisibleGameState(visibleGameState: any): VisibleGameState {
         const state: VisibleGameState = {
             hand: visibleGameState.hand,
