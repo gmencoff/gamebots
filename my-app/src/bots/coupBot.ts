@@ -6,26 +6,24 @@
 
 export class MyCoupBot implements CoupBot {
 
-  myId: number = 0;
-
   handleGameStart(playerId: number): void {
-    // Can do setup action on game start
-    this.myId = playerId;
+    // Perform setup actions
   }
 
   handleChooseAction(gameState: VisibleGameState): Action {
-    // Simple strategy: If we have 7+ coins, coup the first available player
+    // Choose action
     if (gameState.coins >= 7) {
-      const target = gameState.other_players.find(p => !p.visible_card)?.player_id;
-      if (target) {
-        return new Coup(target);
-      } else {
-        return new Coup(gameState.other_players[0].player_id);
-      }
+      return new Coup(gameState.other_players[0].player_id);
+    } else {
+        return new Income();
     }
-    
-    // Default to income if no other action is chosen
-    return new Income();
+
+    // Other actions:
+    // return new ForeignAid();
+    // return new Exchange();
+    // return new Tax();
+    // return new Assassinate(gameState.other_players[0].player_id);
+    // return new Steal(gameState.other_players[0].player_id);
   }
 
   handleAssassinationResponse(playerId: number, gameState: VisibleGameState): AllowOrBlock {
@@ -91,7 +89,7 @@ export class MyCoupBot implements CoupBot {
 }
 
 // ==========================================
-// Available types (DO NOT MODIFY):
+// Available types (DO NOT MODIFY BELOW):
 // ==========================================
 
 // ==========================================
