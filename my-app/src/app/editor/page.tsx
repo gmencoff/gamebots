@@ -125,7 +125,7 @@ function BotIDE(): JSX.Element {
   }
 
   const runCode = async (): Promise<void> => {
-    const url = prompt("Enter WebSocket URL:", "ws://localhost:8080");
+    const url = prompt("Enter WebSocket URL from https://ocoup-mjharts-projects.vercel.app/:", "ws://localhost:8080");
     if (url) {
       getUserBot((bot: CoupBot) => {
         setWorker(new BotRunner(url, bot));
