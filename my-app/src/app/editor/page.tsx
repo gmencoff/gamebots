@@ -8,7 +8,9 @@ import ts from "typescript";
 import { CoupBot } from "../../bots/coupBot";
 import LogConsole from "./Console";
 import { debounce } from "lodash";
-import { loadUserCode, saveUserCode } from "@/firebase/userCodeReadWrite";
+import { loadUserCode, saveDefaultCode, saveUserCode } from "@/firebase/userCodeReadWrite";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, firestore } from "@/firebase/firebase";
 
 declare global {
   interface Window {
@@ -21,6 +23,7 @@ function BotIDE(): JSX.Element {
   const [logs, setLogs] = useState<string[]>([]);
   const [worker, setWorker] = useState<BotRunner | null>(null);
   const [testingBot, setTestingBot] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   // Capture console.log messages to the app log
   console.log = (...args) => {
@@ -40,19 +43,6 @@ function BotIDE(): JSX.Element {
     if (typeof window.MyCoupBots === "undefined") {
       window.MyCoupBots = [];
     }
-
-    async function loadText(url: string): Promise<string> {
-      const response = await fetch(url);
-      return response.text();
-    }
-    
-    async function loadDefaultBot() {
-      const fulltext = await loadText(new URL('../../bots/coupBot.ts', import.meta.url).href);
-      const text = fulltext.replaceAll('export ', '');
-      setCode(text);
-    }
-    
-    loadDefaultBot();
   }, []);
 
   useEffect(() => {
@@ -64,6 +54,25 @@ function BotIDE(): JSX.Element {
     }
     
     loadCode();
+  }, []);
+
+  useEffect(() => {
+    async function userSetup() {
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(firestore, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          if (data && data.isAdmin) {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
+        }
+      }
+    }
+    userSetup();
   }, []);
 
   const getUserBot = async (botFunction: (bot: CoupBot) => void): Promise<void> => {
@@ -125,6 +134,10 @@ function BotIDE(): JSX.Element {
     }
   };
 
+  const setDefault = async (): Promise<void> => {
+    await saveDefaultCode(code);
+  }
+
   const updateBot = (): void => {
     if (worker) {
       setLogs([""]);
@@ -161,6 +174,7 @@ function BotIDE(): JSX.Element {
       {!testingBot ? (
         <div className="flex space-x-2 mt-2">
           <Button onClick={runCode} className="mt-2">Test Bot</Button>
+          {isAdmin ? <Button onClick={setDefault} className="mt-2">Update Default Bot</Button> : null}
         </div>
       ) : (
         <>
